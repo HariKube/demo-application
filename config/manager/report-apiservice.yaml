@@ -1,0 +1,16 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.custom.report.example.example.com
+  annotations:
+    cert-manager.io/inject-ca-from: SERVICE_NAME/SERVICE_NAMESPACE
+spec:
+  group: custom.report.example.example.com
+  version: v1
+  groupPriorityMinimum: 1000
+  versionPriority: 10
+  service:
+    name: v1-custom-report
+    namespace: system
+    port: 443
+  caBundle: ""

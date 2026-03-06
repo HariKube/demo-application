@@ -1,0 +1,74 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingAdmissionPolicy
+metadata:
+  name: "report-auto-finalizer"
+spec:
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["example.example.com"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE"]
+      resources:   ["reports"]
+  matchConditions:
+    - name: finalizer-does-not-exist
+      expression: >
+          !has(object.metadata.finalizers) ||
+          !('example.example.com/finalizer' in object.metadata.finalizers)
+  failurePolicy: Fail
+  reinvocationPolicy: IfNeeded
+  mutations:
+    - patchType: JSONPatch
+      jsonPatch:
+        expression: >
+          !has(object.metadata.finalizers)
+          ? [
+              JSONPatch{
+                op: "add",
+                path: "/metadata/finalizers",
+                value: ["example.example.com/finalizer"]
+              }
+            ]
+          : [
+              JSONPatch{
+                op: "add",
+                path: "/metadata/finalizers/-",
+                value: "example.example.com/finalizer"
+              }
+            ]
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingAdmissionPolicyBinding
+metadata:
+  name: "report-auto-finalizer"
+spec:
+  policyName: "report-auto-finalizer"
+  matchResources:
+    resourceRules:
+    - apiGroups:   ["example.example.com"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE"]
+      resources:   ["reports"]
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: "report-validation"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:   ["example.example.com"]
+      apiVersions: ["v1"]
+      operations:  ["CREATE"]
+      resources:   ["reports"]
+  validations:
+    - expression: "object.metadata.namespace != 'kube-system'"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: "report-validation"
+spec:
+  policyName: "report-validation"
+  validationActions: [Deny]
+

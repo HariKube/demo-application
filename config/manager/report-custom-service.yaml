@@ -1,0 +1,38 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: v1-custom-report-ca
+  namespace: system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: v1-custom-report-cert
+  namespace: system
+spec:
+  secretName: v1-custom-report-tls
+  issuerRef:
+    name: v1-custom-report-ca
+  commonName: v1-custom-report.system.svc
+  dnsNames:
+  - SERVICE_NAME.SERVICE_NAMESPACE.svc
+  - SERVICE_NAME.SERVICE_NAMESPACE.svc.cluster.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: my-project
+    app.kubernetes.io/managed-by: kustomize
+  name: v1-custom-report
+  namespace: system
+spec:
+  ports:
+    - port: 443
+      protocol: TCP
+      targetPort: 7443
+  selector:
+    control-plane: controller-manager
+    app.kubernetes.io/name: my-project
