@@ -1,28 +1,33 @@
-# name: Tests
+name: Tests
 
-# on:
-#   push:
-#   pull_request:
+on:
+  workflow_dispatch:
+  # push:
+  # pull_request:
 
-# jobs:
-#   test:
-#     name: Run on Ubuntu
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Clone the code
-#         uses: actions/checkout@v4
+concurrency: 
+  group: ${{ github.ref_name }}-test
+  cancel-in-progress: true
 
-#       - name: Setup Go
-#         uses: actions/setup-go@v5
-#         with:
-#           go-version-file: go.mod
+jobs:
+  test:
+    name: Run on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone the code
+        uses: actions/checkout@v4
 
-#       - name: Install devbox
-#         uses: jetify-com/devbox-install-action@v0.12.0
-#         with:
-#           enable-cache: 'true'
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
 
-#       - name: Running Tests
-#         run: |
-#           go mod tidy
-#           make test
+      - name: Install devbox
+        uses: jetify-com/devbox-install-action@v0.12.0
+        with:
+          enable-cache: 'true'
+
+      - name: Running Tests
+        run: |
+          go mod tidy
+          make test
