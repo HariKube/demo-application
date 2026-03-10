@@ -231,7 +231,7 @@ _devbox-install:
 	devbox install
 
 package: manifests generate
-	mkdir package
+	mkdir -p package
 
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 
