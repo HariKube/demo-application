@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -51,15 +52,15 @@ func (r *ReportReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	switch {
 	case report.Generation == 1:
 		email.Name += "-created"
-		email.Spec.Subject = "Report has been created: " + req.NamespacedName.String()
+		email.Spec.Subject = fmt.Sprintf("Report has been created: %s/%s", req.Namespace, req.Name)
 	case report.DeletionTimestamp.IsZero():
 		email.Name += "-updated"
-		email.Spec.Subject = "Report has been updated: " + req.NamespacedName.String()
+		email.Spec.Subject = fmt.Sprintf("Report has been updated: %s/%s", req.Namespace, req.Name)
 	case !controllerutil.ContainsFinalizer(&report, "example.example.com/finalizer"):
 		return ctrl.Result{}, nil
 	default:
 		email.Name += "-deleted"
-		email.Spec.Subject = "Report has been deleted: " + req.NamespacedName.String()
+		email.Spec.Subject = fmt.Sprintf("Report has been deleted: %s/%s", req.Namespace, req.Name)
 
 		controllerutil.RemoveFinalizer(&report, "example.example.com/finalizer")
 		if err := r.Update(ctx, &report); err != nil {
