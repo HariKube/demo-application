@@ -4,7 +4,6 @@
 
 export KIND_CLUSTER=kind
 REGISTRY_PASSWORD=$(head -1 demo/credential)
-export IMG=controller:dev
 
 exe() {
     local display_cmd="$@"
@@ -66,7 +65,8 @@ exe vcluster connect harikube
 exe kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
 exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 deployment/cert-manager-webhook --timeout=2m
 
-exe make manifests generate install
+TAG=snapshot-$(date +'%s')
+exe TAG=${TAG} make manifests generate install
 
 exe "echo '
 apiVersion: example.example.com/v1
@@ -109,10 +109,8 @@ spec:
 
 exe 'kubectl get reports report-sample-2 -o yaml'
 
-exe make docker-build
-exe kind load docker-image $IMG
-
-exe make manifests generate deploy
+exe TAG=${TAG} make docker-build docker-load
+exe TAG=${TAG} make manifests generate deploy
 
 exe kubectl wait -n demo-application-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/demo-application-controller-manager --timeout=2m
 
