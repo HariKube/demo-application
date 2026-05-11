@@ -14,12 +14,11 @@ exe() {
     eval "$@"
 }
 
-exe echo ' \
-kubebuilder init --domain example.com --repo example.com/my-project \
-kubebuilder create api --group example --version v1 --kind Report --resource=true --controller=true \
-kubebuilder create api --group example --version v1 --kind Email --resource=true --controller=true \
-kubebuilder create webhook --group example --version v1 --kind Report --programmatic-validation --defaulting \
-'
+exe echo kubebuilder init --domain example.com --repo example.com/my-project
+exe echo kubebuilder create api --group example --version v1 --kind Report --resource=true --controller=true
+exe echo kubebuilder create api --group example --version v1 --kind Email --resource=true --controller=true
+exe echo kubebuilder create webhook --group example --version v1 --kind Report --programmatic-validation --defaulting
+
 exe kind create cluster
 exe kubectl wait --for=condition=Ready node/kind-control-plane --timeout=2m
 
@@ -30,16 +29,15 @@ exe kubectl apply -f https://github.com/prometheus-operator/prometheus-operator/
 exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 deployment/cert-manager-webhook --timeout=2m
 
 exe kubectl create namespace harikube
+exe kubectl label namespace harikube harikube.info/middleware=enabled --overwrite
 exe kubectl create secret generic -n harikube harikube-license --from-file=demo/license
 exe kubectl create secret docker-registry harikube-registry-secret \
 --docker-server=registry.harikube.info \
 --docker-username=harikube \
 --docker-password='${REGISTRY_PASSWORD}' \
 --namespace=harikube
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-operator-release-v1.0.1.yaml
-exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.3.yaml
-exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 deployment/operator-controller-manager --timeout=2m
-exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube --timeout=5m
+exe kubectl apply -f ${HARIKUBE_URL}/manifests/harikube-middleware-vcluster-workload-release-v1.0.4.yaml
+exe kubectl wait -n harikube --for=jsonpath='{.status.readyReplicas}'=1 statefulset/harikube-vcluster --timeout=5m
 
 exe "echo '
 apiVersion: harikube.info/v1
@@ -60,7 +58,7 @@ spec:
 sleep 2
 exe "kubectl logs -n harikube -l app=harikube | grep 'Backends registered' | tail -1"
 
-exe vcluster connect harikube
+exe vcluster connect harikube-vcluster
 
 exe kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.16.3/cert-manager.yaml
 exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 deployment/cert-manager-webhook --timeout=2m
@@ -68,6 +66,7 @@ exe kubectl wait -n cert-manager --for=jsonpath='{.status.readyReplicas}'=1 depl
 TAG=snapshot-$(date +'%s')
 exe TAG=${TAG} make manifests generate install
 
+sleep 5
 exe "echo '
 apiVersion: example.example.com/v1
 kind: Report
@@ -114,6 +113,7 @@ exe TAG=${TAG} make manifests generate deploy
 
 exe kubectl wait -n demo-application-system --for=jsonpath='{.status.readyReplicas}'=1 deployment/demo-application-controller-manager --timeout=2m
 
+sleep 5
 exe "echo '
 apiVersion: example.example.com/v1
 kind: Report
@@ -209,7 +209,7 @@ exe helm upgrade openfaas --install openfaas/openfaas \
 --set functionNamespace=demo-application-system \
 --set serviceType=NodePort \
 --set gateway.nodePort=32767
-exe kubectl wait -n openfaas --for=jsonpath='{.status.readyReplicas}'=1 deployment/gateway --timeout=2m
+exe kubectl wait -n openfaas --for=jsonpath='{.status.readyReplicas}'=1 deployment/gateway --timeout=3m
 
 OPENFAASPWD=$(kubectl get secret -n openfaas basic-auth -o jsonpath='{.data.basic-auth-password}'| base64 -d)
 
@@ -226,4 +226,5 @@ exe kubectl rollout status deployment/email -n demo-application-system --timeout
 
 exe kubectl delete reports report-sample-3
 
+sleep 5
 exe kubectl get emails report-sample-3-deleted -o yaml
