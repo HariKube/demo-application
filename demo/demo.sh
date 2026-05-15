@@ -56,7 +56,7 @@ spec:
 ' | kubectl apply -f -
 "
 sleep 2
-exe "kubectl logs -n harikube -l app=harikube | grep 'Backends registered' | tail -1"
+exe "kubectl logs -n harikube -l app=harikube-middleware | grep 'Backends registered' | tail -1"
 
 exe vcluster connect harikube-vcluster
 
@@ -108,6 +108,8 @@ spec:
 
 exe 'kubectl get reports report-sample-2 -o yaml'
 
+exe echo 'End of API demo'
+
 exe TAG=${TAG} make docker-build docker-load
 exe TAG=${TAG} make manifests generate deploy
 
@@ -132,7 +134,12 @@ exe "kubectl patch reports report-sample-3 --type='json' -p='[{\"op\":\"replace\
 
 exe kubectl get emails report-sample-3-updated -o yaml
 
-exe echo 'Do you want more?'
+exe echo 'End of controller demo'
+
+sleep 5
+exe kubectl get customreports ||:
+
+exe echo 'End of Aggregation API demo'
 
 exe "echo '
 apiVersion: rbac.authorization.k8s.io/v1

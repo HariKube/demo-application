@@ -7,4 +7,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: harikube/demo-application
-  newTag: snapshot-1778516033--dirty
+  newTag: snapshot-1778833708--dirty

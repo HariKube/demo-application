@@ -26,27 +26,27 @@ func New(port, certFile, keyFile string) *customAPIServer {
 					ApiResource: metav1.APIResource{
 						Name:       "customreports",
 						Namespaced: true,
-						Kind:       "CustomPod",
+						Kind:       "CustomReport",
 						Verbs:      []string{"get", "list", "watch", "create", "update", "delete"},
 					},
 					CustomResource: &kaf.CustomResource{
 						CreateHandler: func(namespace, name string, w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							http.Error(w, "I'm a teapot", http.StatusTeapot)
 						},
 						GetHandler: func(namespace, name string, w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							http.Error(w, "I'm a teapot", http.StatusTeapot)
 						},
 						ListHandler: func(namespace, name string, w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							http.Error(w, "I'm a teapot", http.StatusTeapot)
 						},
 						ReplaceHandler: func(namespace, name string, w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							http.Error(w, "I'm a teapot", http.StatusTeapot)
 						},
 						DeleteHandler: func(namespace, name string, w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							http.Error(w, "I'm a teapot", http.StatusTeapot)
 						},
 						WatchHandler: func(namespace, name string, w http.ResponseWriter, r *http.Request) {
-							w.Header().Set("Content-Type", "application/json; charset=utf-8")
+							http.Error(w, "I'm a teapot", http.StatusTeapot)
 						},
 					},
 				},
